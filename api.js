@@ -258,16 +258,9 @@ module.exports = function (app, hexo) {
 
   use('deploy', function(req, res, next) {
     if (req.method !== 'POST') return next()
-    if (!hexo.config.admin || !hexo.config.admin.deployCommand) {
-      return res.done({error: 'Config value "admin.deployCommand" not found'});
-    }
     try {
-      deploy(hexo.config.admin.deployCommand, req.body.message, function(err, result) {
-        console.log('res', err, result);
-        if (err) {
-          return res.done({error: err.message || err})
-        }
-        res.done(result);
+      hexo.call('generate', {deploy:true}).then( function() {
+        res.done({stdout: 'Done', stderr: 'No errors'});
       });
     } catch (e) {
       console.log('EEE', e);
