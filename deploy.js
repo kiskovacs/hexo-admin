@@ -1,26 +1,98 @@
+var fs = require('fs'),
+  path = require('path'),
+  moment = require('moment'),
+  hfm = require('hexo-front-matter'),
+  file = require('hexo-fs'),
+  dbox = require('dbox'),
+  extend = require('extend');
+//  yfm = util.yfm,
+//  escape = util.escape;
 
-var spawn = require('child_process').spawn
-
-function once(fn) {
-  var called = false
-  return function () {
-    if (!called) fn.apply(this, arguments)
-    called = true
+/**
+ * Updates a post.
+ *
+ * @method update
+ * @param {str} model the type of model being updated
+ * @param {Object} post a post model
+ * @param {Object} update attributes to update
+ * @param {Function} callback
+ */
+module.exports = function (model, id, update, callback, hexo) {
+  var post = hexo.model(model).get(id)
+  if (!post) {
+    return callback('Post not found');
   }
-}
+  var config = hexo.config,
+    slug = post.slug = hfm.escape(post.slug || post.title, config.filename_case),
+    layout = post.layout = (post.layout || config.default_layout).toLowerCase(),
+    date = post.date = post.date ? moment(post.date) : moment();
+ 
+  var dbox_client = config.dropbox_migrator? dbox.app({
+      "app_key": config.dropbox_migrator.app_key,
+      "app_secret": config.dropbox_migrator.app_secret,
+      "root": "dropbox"}
+  ).client({
+      "oauth_token_secret": config.dropbox_migrator.oauth_token_secret,
+      "oauth_token": config.dropbox_migrator.oauth_token,
+      "uid": config.dropbox_migrator.userid}
+  ): null;
+  
+  var split = hfm.split(post.raw),
+    frontMatter = split.data,
+    compiled = hfm.parse([frontMatter, '---', split.content].join('\n'));
 
-module.exports = function (command, message, done) {
-  done = once(done);
-  var proc = spawn(command, [message], {detached: true});
-  var stdout = '';
-  var stderr = '';
-  proc.stdout.on('data', function(data){stdout += data.toString()})
-  proc.stderr.on('data', function(data){stderr += data.toString()})
-  proc.on('error', function(err) {
-    done(err, {stdout: stdout, stderr: stderr});
+  var preservedKeys = ['title', 'date', 'tags', 'categories', '_content'];
+  var prev_full = post.full_source,
+    full_source = prev_full;
+  if (update.source && update.source !== post.source) {
+    // post.full_source only readable ~ see: /hexo/lib/models/post.js
+    full_source = hexo.source_dir + update.source
+  }
+
+  preservedKeys.forEach(function (attr) {
+    if (attr in update) {
+      compiled[attr] = update[attr]
+    }
   });
-  proc.on('close', function () {
-    done(null, {stdout: stdout, stderr: stderr});
+  compiled.date = moment(compiled.date).toDate()
+
+  delete update._content
+
+  var raw = hfm.stringify(compiled);
+  update.raw = raw
+  update.updated = moment()
+
+  // tags and cats are only getters now. ~ see: /hexo/lib/models/post.js
+  if ( typeof update.tags !== 'undefined' ) {
+    post.setTags(update.tags)
+    delete update.tags
+  }
+  if ( typeof update.categories !== 'undefined' ) {
+    post.setCategories(update.categories)
+    delete update.categories
+  }
+
+  extend(post, update)
+
+  post.save(function () {
+  //  console.log(post.full_source, post.source)
+    file.writeFile(full_source, raw, function(err){
+      if (err) return callback(err);
+
+      if (full_source !== prev_full) {
+        fs.unlinkSync(prev_full)
+      }
+      
+      if (dbox_client){
+        dbox_client.put(config.dropbox_migrator.source_dir + full_source, raw, function(status, reply){
+          console.log(status, reply);
+        })  
+      }
+      
+      hexo.source.process([post.source]).then(function () {
+  //      console.log(post.full_source, post.source)
+        callback(null, hexo.model(model).get(id));
+      });
+    });
   });
 }
-
