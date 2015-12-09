@@ -1,6 +1,7 @@
 var fs = require('fs'),
   path = require('path'),
   moment = require('moment'),
+  dbox = require('dbox'),
   hfm = require('hexo-front-matter'),
   file = require('hexo-fs'),
   extend = require('extend');
@@ -21,11 +22,24 @@ module.exports = function (model, id, update, callback, hexo) {
   if (!post) {
     return callback('Post not found');
   }
+  
+  var logger = hexo.log;
+  
   var config = hexo.config,
     slug = post.slug = hfm.escape(post.slug || post.title, config.filename_case),
     layout = post.layout = (post.layout || config.default_layout).toLowerCase(),
     date = post.date = post.date ? moment(post.date) : moment();
-
+    
+  var dbox_client = config.dropbox_migrator? dbox.app({
+      "app_key": config.dropbox_migrator.app_key,
+      "app_secret": config.dropbox_migrator.app_secret,
+      "root": "dropbox"}
+  ).client({
+      "oauth_token_secret": config.dropbox_migrator.oauth_token_secret,
+      "oauth_token": config.dropbox_migrator.oauth_token,
+      "uid": config.dropbox_migrator.userid
+      }): null;
+  
   var split = hfm.split(post.raw),
     frontMatter = split.data
     compiled = hfm.parse([frontMatter, '---', split.content].join('\n'));
@@ -64,15 +78,28 @@ module.exports = function (model, id, update, callback, hexo) {
   extend(post, update)
 
   post.save(function () {
-  //  console.log(post.full_source, post.source)
+    if (dbox_client){
+      var dbox_source = config.dropbox_migrator.source_dir +
+       (config.source_dir[config.source_dir.length-1] === '/' ? '' : '/') + 
+          post.source;
+      logger.info("Writing to dropbox:", dbox_source);
+      dbox_client.put(dbox_source, raw, function(status, replay){
+        if (status == 200){
+          logger.info("Dropbox write success:", replay);
+        } else {
+          logger.error("Dropbox returned status:", status, replay);
+        }
+      })
+    }
+    
     file.writeFile(full_source, raw, function(err){
       if (err) return callback(err);
-
+      logger.log("Saved:",post.full_source, post.source)  
       if (full_source !== prev_full) {
         fs.unlinkSync(prev_full)
       }
       hexo.source.process([post.source]).then(function () {
-  //      console.log(post.full_source, post.source)
+        logger.log("Processed:",post.full_source, post.source)
         callback(null, hexo.model(model).get(id));
       });
     });
