@@ -69,25 +69,7 @@ var Deploy = React.createClass({
     var body;
     if (this.state.error) {
       body = <h4>Error: { this.state.error } </h4>
-    } else if (this.state.status === 'loading') {
-      body = (
-        <div> 
-          <h4>Loading...</h4>
-          {this.state.log.records.map( record =>
-            <pre>{record.msg}</pre>
-          )}
-        </div>
-      );
-    } else if (this.state.status === 'success') {
-      body = (
-      <div>
-        <h4>Std Output< /h4>
-        < pre >{ this.state.stdout }< /pre>
-        < h4 > Std Error< /h4>
-        < pre >{ this.state.stderr }< /pre>
-      < /div>
-      );
-    }  else if (this.state.status === 'initial') {
+    }  else {
       body = (
         <div> 
           {this.state.log.records.map( record =>
