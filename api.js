@@ -32,7 +32,7 @@ module.exports = function (app, hexo) {
     return logger;
   }
   
-  hexo.log = createLogger();
+  var logger = hexo.log = createLogger();
 
   function addIsDraft(post) {
     post.isDraft = post.source.indexOf('_draft') === 0
@@ -139,7 +139,7 @@ module.exports = function (app, hexo) {
 
     hexo.post.create({title: req.body.title, layout: 'page', date: new Date()})
     .error(function(err) {
-      console.error(err, err.stack)
+      logger.error(err, err.stack)
       return res.send(500, 'Failed to create page')
     })
     .then(function (err, file) {
@@ -154,7 +154,7 @@ module.exports = function (app, hexo) {
 
   use('pages/', function (req, res, next) {
     var url = req.url
-    console.log('in pages', url)
+    logger.log('in pages', url)
     if (url[url.length - 1] === '/') {
       url = url.slice(0, -1)
     }
@@ -204,7 +204,7 @@ module.exports = function (app, hexo) {
 
     hexo.post.create({title: req.body.title, layout: 'draft', date: new Date()})
     .error(function(err) {
-      console.error(err, err.stack)
+      logger.error(err, err.stack)
       return res.send(500, 'Failed to create post')
     })
     .then(function (file) {
@@ -275,7 +275,7 @@ module.exports = function (app, hexo) {
     var buf = new Buffer(dataURI, 'base64')
     fs.writeFile(outpath, buf, function (err) {
       if (err) {
-        console.log(err)
+        logger.log(err)
       }
       hexo.source.process([filename]).then(function () {
         res.done('/' + filename)
@@ -283,14 +283,18 @@ module.exports = function (app, hexo) {
     })
   });
 
+  var deploy_in_progress = false;
   use('deploy', function(req, res, next) {
-    if (req.method !== 'POST') return next()
-    try {
+    if (req.method === 'POST' && !deploy_in_progress) try {
+      deploy_in_progress = true;
       hexo.call('generate', {deploy:true}).then( function() {
+        logger.log('Deploy finished');
+        deploy_in_progress = false;
         res.done({stdout: 'Done', stderr: 'No errors'});
       });
     } catch (e) {
-      console.log('EEE', e);
+      logger.log('Deploy failed:', e);
+      deploy_in_progress = false;
       res.done({error: e.message})
     }
   });
