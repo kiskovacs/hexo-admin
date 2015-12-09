@@ -1,7 +1,7 @@
 var path = require('path')
 var fs = require('fs')
 var bunyan = require('bunyan');
-var ringbuffer = new bunyan.RingBuffer({ limit: 100 });
+var ringbuffer = new bunyan.RingBuffer({ limit: 10 });
 var updateAny = require('./update')
   , updatePage = updateAny.bind(null, 'Page')
   , update = updateAny.bind(null, 'Post')
