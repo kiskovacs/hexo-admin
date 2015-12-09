@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jaredly/hexo-admin.git"
+    "url": "git+https://github.com/jaredly/hexo-admin.git"
   },
   "keywords": [
     "hexo",
@@ -17,7 +17,10 @@
     "dashboard",
     "plugin"
   ],
-  "author": "Jared Forsyth <jared@jaredforsyth.com>",
+  "author": {
+    "name": "Jared Forsyth",
+    "email": "jared@jaredforsyth.com"
+  },
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/jaredly/hexo-admin/issues"
@@ -27,6 +30,7 @@
     "MD5": "^1.2.1",
     "body-parser": "^1.5.0",
     "browserify": "^11.2.0",
+    "bunyan": "^1.5.1",
     "connect-auth": "^0.6.1",
     "cookie-parser": "^1.3.4",
     "dbox": "^0.6.4",
@@ -50,5 +54,12 @@
     "reactify": "^0.14.0",
     "superagent": "^0.18.2",
     "superagent-browserify": "0.0.2"
-  }
+  },
+  "gitHead": "9b955ca7be2a6f23f9d8ec9408c8da6eb6466f0c",
+  "readme": "![logo](docs/logo.png?raw=true)\n\nAn admin UI for the [Hexo blog engine](http://hexo.io). Based off of the [Ghost](http://ghost.org) interface, with inspiration from [svbtle](http://svbtle.com) and [prose.io](http://prose.io).\n\n## Hexo Version\n\nFor 2.x, use version `0.3.0` of this plugin. Version `1.x` and beyond only\nsupport Hexo v3.x.\n\n### Contents\n- [**Screenshots**](#screenshots)\n- [**Quickstart**](#quickstart)\n- [**Credits**](#credits)\n\n# Screenshots\n![posts view](docs/pasted-0.png?raw=true)\n\n![editor view](docs/pasted-1.png?raw=true)\n\n# Quickstart\n### 1. Setup hexo & create a blog\n```sh\nnpm install -g hexo\ncd ~/\nhexo init my-blog\ncd my-blog\nnpm install\n```\n### 2. Install the admin & start things up\n```sh\nnpm install --save hexo-admin\nhexo server -d\nopen http://localhost:4000/admin/\n```\n### 3. Profit!\nThe UI should be pretty discoverable -- let me know if you can't find something.\n\n### 4. Password protection\nIf you're using Hexo admin on your live server, you want some password\nprotection. To enable this, you just add a few config variables to your hexo\n`_config.yml`:\n\n```\nadmin:\n  username: myfavoritename\n  password_hash: be121740bf988b2225a313fa1f107ca1\n  secret: a secret something\n```\n\nThe password_hash is the md5 hash of your password. You can use [this\nsite](http://www.md5.cz/) to come up with that, or whatever you want. The\n`secret` is used to make the cookies secure, so it's a good idea to have it be\nlong and complicated.\n\nOnce that's in place, start up your hexo server and going to `/admin/` will\nrequire you to enter your password.\n\n### 5. Contribute!\n- let me know how it can be improved in the [github\n  issues](https://github.com/jaredly/hexo-admin/issues)\n- [fork](https://github.com/jaredly/hexo-admin) and pull-request\n\n# Credits\n\nbuilt with ❤ by [Jared Forsyth](http://jaredly.github.io)\n([@jaredforsyth](http://twitter.com/jaredforsyth)) using\n[react](http://facebook.github.io/react), [browserify](\nhttp://browserify.org), and [less](http://lesscss.org).\n",
+  "readmeFilename": "Readme.md",
+  "_id": "hexo-admin@1.1.1",
+  "_shasum": "1062866819c6151ef45154b4c30765b0e1290306",
+  "_from": "kiskovacs/hexo-admin",
+  "_resolved": "git+https://github.com/kiskovacs/hexo-admin.git#9b955ca7be2a6f23f9d8ec9408c8da6eb6466f0c"
 }

@@ -51,6 +51,7 @@ module.exports = function (baseUrl) {
     publish: (id) => post('/posts/' + id + '/publish'),
     unpublish: (id) => post('/posts/' + id + '/unpublish'),
     tagsAndCategories: () => get('/tags-and-categories'),
+    log: () => get('/log'),
   }
 }
 

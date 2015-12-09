@@ -1,11 +1,38 @@
 var path = require('path')
 var fs = require('fs')
+var bunyan = require('bunyan');
+var ringbuffer = new bunyan.RingBuffer({ limit: 100 });
 var updateAny = require('./update')
   , updatePage = updateAny.bind(null, 'Page')
   , update = updateAny.bind(null, 'Post')
   , deploy = require('./deploy')
 
 module.exports = function (app, hexo) {
+  
+  function createLogger(){
+    var logger = bunyan.createLogger({
+      name: 'hexo',
+      streams: [{
+          level: 'info',
+          type: 'raw',    // use 'raw' to get raw log record objects 
+          stream: ringbuffer
+      }],
+      serializers: {
+        err: bunyan.stdSerializers.err
+      }
+    });
+  
+    // Alias for logger levels
+    logger.d = logger.debug;
+    logger.i = logger.info;
+    logger.w = logger.warn;
+    logger.e = logger.error;
+    logger.log = logger.info;
+  
+    return logger;
+  }
+  
+  hexo.log = createLogger();
 
   function addIsDraft(post) {
     post.isDraft = post.source.indexOf('_draft') === 0
@@ -268,4 +295,7 @@ module.exports = function (app, hexo) {
     }
   });
 
+  use('log', function(req, res, next) {
+    res.done({records: ringbuffer.records});
+  });
 }
