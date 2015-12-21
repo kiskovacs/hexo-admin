@@ -1,16 +1,15 @@
 var md5 = require("MD5");
 
-module.exports = function (hexo) {
+module.exports = function (config, redirectUrl) {
     this.name = "adminAuth";
 
-    function failed_validation( request, response ) {
-        var redirectUrl= "/admin/login";
+    function failed_validation( request, response ) {        
         response.writeHead(303, { 'Location':  redirectUrl });
         response.end();
     }
 
     function validate_credentials( executionScope, request, response, callback ) {
-        var config = hexo.config.admin
+
         if( request.body.username == config.username && md5(request.body.password) == config.password_hash ) {
             executionScope.success({name:request.body.user}, callback)
         }
