@@ -5,7 +5,6 @@ var ringbuffer = new bunyan.RingBuffer({ limit: 5 });
 var updateAny = require('./update')
   , updatePage = updateAny.bind(null, 'Page')
   , update = updateAny.bind(null, 'Post')
-  , deploy = require('./deploy')
 
 module.exports = function (app, hexo) {
   
