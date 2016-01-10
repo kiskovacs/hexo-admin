@@ -62,9 +62,6 @@ module.exports = function (model, id, update, callback, hexo) {
   delete update._content
 
   var raw = hfm.stringify(compiled)
-    .replace(/title: ([^"\n]+)/,'title: "$1"')
-    .replace(/- ([^"\n]+)/g,'- "$1"')
-    ;
   update.raw = raw
   update.updated = moment()
 
